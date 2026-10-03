@@ -6,13 +6,13 @@
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("babel-runtime/core-js/get-iterator"), require("babel-runtime/core-js/object/keys"), require("markdown-it"), require("markdown-it-emoji"), require("markdown-it-sub"), require("markdown-it-sup"), require("markdown-it-footnote"), require("markdown-it-deflist"), require("markdown-it-abbr"), require("markdown-it-ins"), require("markdown-it-mark"), require("markdown-it-toc-and-anchor"), require("markdown-it-katex"), require("markdown-it-task-lists"));
+		module.exports = factory(require("babel-runtime/core-js/object/keys"), require("vue"), require("markdown-it"), require("markdown-it-emoji"), require("markdown-it-sub"), require("markdown-it-sup"), require("markdown-it-footnote"), require("markdown-it-deflist"), require("markdown-it-abbr"), require("markdown-it-ins"), require("markdown-it-mark"), require("markdown-it-toc-and-anchor"), require("markdown-it-katex"), require("markdown-it-task-lists"));
 	else if(typeof define === 'function' && define.amd)
-		define(["babel-runtime/core-js/get-iterator", "babel-runtime/core-js/object/keys", "markdown-it", "markdown-it-emoji", "markdown-it-sub", "markdown-it-sup", "markdown-it-footnote", "markdown-it-deflist", "markdown-it-abbr", "markdown-it-ins", "markdown-it-mark", "markdown-it-toc-and-anchor", "markdown-it-katex", "markdown-it-task-lists"], factory);
+		define(["babel-runtime/core-js/object/keys", "vue", "markdown-it", "markdown-it-emoji", "markdown-it-sub", "markdown-it-sup", "markdown-it-footnote", "markdown-it-deflist", "markdown-it-abbr", "markdown-it-ins", "markdown-it-mark", "markdown-it-toc-and-anchor", "markdown-it-katex", "markdown-it-task-lists"], factory);
 	else if(typeof exports === 'object')
-		exports["VueMarkdown"] = factory(require("babel-runtime/core-js/get-iterator"), require("babel-runtime/core-js/object/keys"), require("markdown-it"), require("markdown-it-emoji"), require("markdown-it-sub"), require("markdown-it-sup"), require("markdown-it-footnote"), require("markdown-it-deflist"), require("markdown-it-abbr"), require("markdown-it-ins"), require("markdown-it-mark"), require("markdown-it-toc-and-anchor"), require("markdown-it-katex"), require("markdown-it-task-lists"));
+		exports["VueMarkdown"] = factory(require("babel-runtime/core-js/object/keys"), require("vue"), require("markdown-it"), require("markdown-it-emoji"), require("markdown-it-sub"), require("markdown-it-sup"), require("markdown-it-footnote"), require("markdown-it-deflist"), require("markdown-it-abbr"), require("markdown-it-ins"), require("markdown-it-mark"), require("markdown-it-toc-and-anchor"), require("markdown-it-katex"), require("markdown-it-task-lists"));
 	else
-		root["VueMarkdown"] = factory(root["babel-runtime/core-js/get-iterator"], root["babel-runtime/core-js/object/keys"], root["markdown-it"], root["markdown-it-emoji"], root["markdown-it-sub"], root["markdown-it-sup"], root["markdown-it-footnote"], root["markdown-it-deflist"], root["markdown-it-abbr"], root["markdown-it-ins"], root["markdown-it-mark"], root["markdown-it-toc-and-anchor"], root["markdown-it-katex"], root["markdown-it-task-lists"]);
+		root["VueMarkdown"] = factory(root["babel-runtime/core-js/object/keys"], root["vue"], root["markdown-it"], root["markdown-it-emoji"], root["markdown-it-sub"], root["markdown-it-sup"], root["markdown-it-footnote"], root["markdown-it-deflist"], root["markdown-it-abbr"], root["markdown-it-ins"], root["markdown-it-mark"], root["markdown-it-toc-and-anchor"], root["markdown-it-katex"], root["markdown-it-task-lists"]);
 })(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_5__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_7__, __WEBPACK_EXTERNAL_MODULE_8__, __WEBPACK_EXTERNAL_MODULE_9__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_11__, __WEBPACK_EXTERNAL_MODULE_12__, __WEBPACK_EXTERNAL_MODULE_13__, __WEBPACK_EXTERNAL_MODULE_14__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -66,13 +66,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
-	var _getIterator2 = __webpack_require__(1);
-
-	var _getIterator3 = _interopRequireDefault(_getIterator2);
-
-	var _keys = __webpack_require__(2);
+	var _keys = __webpack_require__(1);
 
 	var _keys2 = _interopRequireDefault(_keys);
+
+	var _vue = __webpack_require__(2);
 
 	var _markdownIt = __webpack_require__(3);
 
@@ -124,11 +122,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function slotText(nodes) {
+	  return nodes.map(function (node) {
+	    if (node.type === _vue.Comment) return '';
+	    if (Array.isArray(node.children)) return slotText(node.children);
+	    return typeof node.children === 'string' ? node.children : '';
+	  }).join('');
+	}
+
 	exports.default = {
-	  md: new _markdownIt2.default(),
+	  name: 'VueMarkdown',
+	  compatConfig: { MODE: 3 },
+	  emits: ['rendered', 'toc-rendered'],
 
-	  template: '<div><slot></slot></div>',
-
+	  created: function created() {
+	    this._slotSourceInitialized = false;
+	  },
 	  data: function data() {
 	    return {
 	      sourceData: this.source
@@ -259,16 +268,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  },
 
-	  render: function render(createElement) {
+	  render: function render() {
 	    var _this = this;
 
-	    this.md = new _markdownIt2.default().use(_markdownItSub2.default).use(_markdownItSup2.default).use(_markdownItFootnote2.default).use(_markdownItDeflist2.default).use(_markdownItAbbr2.default).use(_markdownItIns2.default).use(_markdownItMark2.default).use(_markdownItKatex2.default, { "throwOnError": false, "errorColor": " #cc0000" }).use(_markdownItTaskLists2.default, { enabled: this.taskLists });
+	    if (!this._slotSourceInitialized) {
+	      this._slotSourceInitialized = true;
+	      if (this.$slots.default) this.sourceData = slotText(this.$slots.default());
+	    }
+	    var md = new _markdownIt2.default().use(_markdownItSub2.default).use(_markdownItSup2.default).use(_markdownItFootnote2.default).use(_markdownItDeflist2.default).use(_markdownItAbbr2.default).use(_markdownItIns2.default).use(_markdownItMark2.default).use(_markdownItKatex2.default, { "throwOnError": false, "errorColor": " #cc0000" }).use(_markdownItTaskLists2.default, { enabled: this.taskLists });
 
 	    if (this.emoji) {
-	      this.md.use(_markdownItEmoji2.default);
+	      md.use(_markdownItEmoji2.default);
 	    }
 
-	    this.md.set({
+	    md.set({
 	      html: this.html,
 	      xhtmlOut: this.xhtmlOut,
 	      breaks: this.breaks,
@@ -277,27 +290,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	      langPrefix: this.langPrefix,
 	      quotes: this.quotes
 	    });
-	    this.md.renderer.rules.table_open = function () {
-	      return '<table class="' + _this.tableClass + '">\n';
+	    md.renderer.rules.table_open = function () {
+	      return '<table class="' + md.utils.escapeHtml(_this.tableClass) + '">\n';
 	    };
-	    var defaultLinkRenderer = this.md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+	    var defaultLinkRenderer = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
 	      return self.renderToken(tokens, idx, options);
 	    };
-	    this.md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-	      (0, _keys2.default)(_this.anchorAttributes).map(function (attribute) {
-	        var aIndex = tokens[idx].attrIndex(attribute);
+	    md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+	      // The TOC plugin creates plain tokens without Token prototype methods.
+	      var attrs = tokens[idx].attrs || (tokens[idx].attrs = []);
+	      (0, _keys2.default)(_this.anchorAttributes).forEach(function (attribute) {
+	        var aIndex = attrs.findIndex(function (attr) {
+	          return attr[0] === attribute;
+	        });
 	        var value = _this.anchorAttributes[attribute];
 	        if (aIndex < 0) {
-	          tokens[idx].attrPush([attribute, value]); // add new attribute
+	          attrs.push([attribute, value]);
 	        } else {
-	          tokens[idx].attrs[aIndex][1] = value;
+	          attrs[aIndex][1] = value;
 	        }
 	      });
 	      return defaultLinkRenderer(tokens, idx, options, env, self);
 	    };
 
 	    if (this.toc) {
-	      this.md.use(_markdownItTocAndAnchor2.default, {
+	      md.use(_markdownItTocAndAnchor2.default, {
 	        tocClassName: this.tocClass,
 	        tocFirstLevel: this.tocFirstLevel,
 	        tocLastLevel: this.tocLastLevelComputed,
@@ -308,7 +325,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        anchorLinkSymbolClassName: this.tocAnchorLinkClass,
 	        tocCallback: function tocCallback(tocMarkdown, tocArray, tocHtml) {
 	          if (tocHtml) {
-	            if (_this.tocId && document.getElementById(_this.tocId)) {
+	            if (typeof document !== 'undefined' && _this.tocId && document.getElementById(_this.tocId)) {
 	              document.getElementById(_this.tocId).innerHTML = tocHtml;
 	            }
 
@@ -318,50 +335,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    }
 
-	    var outHtml = this.show ? this.md.render(this.prerender(this.sourceData)) : '';
+	    var outHtml = this.show ? md.render(this.prerender(this.sourceData)) : '';
 	    outHtml = this.postrender(outHtml);
 
 	    this.$emit('rendered', outHtml);
-	    return createElement('div', {
-	      domProps: {
-	        innerHTML: outHtml
-	      }
-	    });
+	    return (0, _vue.h)('div', { innerHTML: outHtml });
 	  },
 	  beforeMount: function beforeMount() {
 	    var _this2 = this;
 
-	    if (this.$slots.default) {
-	      this.sourceData = '';
-	      var _iteratorNormalCompletion = true;
-	      var _didIteratorError = false;
-	      var _iteratorError = undefined;
-
-	      try {
-	        for (var _iterator = (0, _getIterator3.default)(this.$slots.default), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	          var slot = _step.value;
-
-	          this.sourceData += slot.text;
-	        }
-	      } catch (err) {
-	        _didIteratorError = true;
-	        _iteratorError = err;
-	      } finally {
-	        try {
-	          if (!_iteratorNormalCompletion && _iterator.return) {
-	            _iterator.return();
-	          }
-	        } finally {
-	          if (_didIteratorError) {
-	            throw _iteratorError;
-	          }
-	        }
-	      }
-	    }
-
 	    this.$watch('source', function () {
-	      _this2.sourceData = _this2.prerender(_this2.source);
-	      _this2.$forceUpdate();
+	      _this2.sourceData = _this2.source;
 	    });
 
 	    this.watches.forEach(function (v) {
