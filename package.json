@@ -2,7 +2,7 @@
   "name": "vue-markdown",
   "version": "2.2.4",
   "description": "A Powerful and Highspeed Markdown Parser for Vue",
-  "main": "dist/vue-markdown.common.js",
+  "main": "src/index.js",
   "files": [
     "dist/vue-markdown.js",
     "dist/vue-markdown.common.js",
@@ -11,7 +11,7 @@
   "scripts": {
     "start": "webpack --config webpack.config.js",
     "build": "webpack --config webpack.common.js",
-    "test": "echo true"
+    "test": "node test/vue3.cjs"
   },
   "repository": {
     "type": "git",
@@ -39,6 +39,9 @@
     "json-loader": "^0.5.7",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
   },
   "dependencies": {
     "highlight.js": "^9.12.0",

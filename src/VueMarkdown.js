@@ -1,3 +1,4 @@
+import { h, Comment } from 'vue'
 import markdownIt from 'markdown-it'
 import emoji from 'markdown-it-emoji'
 import subscript from 'markdown-it-sub'
@@ -11,10 +12,22 @@ import toc from 'markdown-it-toc-and-anchor'
 import katex from 'markdown-it-katex'
 import tasklists from 'markdown-it-task-lists'
 
-export default {
-  md: new markdownIt(),
+function slotText(nodes) {
+  return nodes.map(node => {
+    if (node.type === Comment) return ''
+    if (Array.isArray(node.children)) return slotText(node.children)
+    return typeof node.children === 'string' ? node.children : ''
+  }).join('')
+}
 
-  template: '<div><slot></slot></div>',
+export default {
+  name: 'VueMarkdown',
+  compatConfig: { MODE: 3 },
+  emits: ['rendered', 'toc-rendered'],
+
+  created() {
+    this._slotSourceInitialized = false
+  },
 
   data() {
     return {
@@ -137,8 +150,12 @@ export default {
     }
   },
 
-  render(createElement) {
-    this.md = new markdownIt()
+  render() {
+    if (!this._slotSourceInitialized) {
+      this._slotSourceInitialized = true
+      if (this.$slots.default) this.sourceData = slotText(this.$slots.default())
+    }
+    const md = new markdownIt()
       .use(subscript)
       .use(superscript)
       .use(footnote)
@@ -150,10 +167,10 @@ export default {
       .use(tasklists, { enabled: this.taskLists })
 
     if (this.emoji) {
-      this.md.use(emoji)
+      md.use(emoji)
     }
 
-    this.md.set({
+    md.set({
       html: this.html,
       xhtmlOut: this.xhtmlOut,
       breaks: this.breaks,
@@ -162,26 +179,28 @@ export default {
       langPrefix: this.langPrefix,
       quotes: this.quotes,
     })
-    this.md.renderer.rules.table_open = () => `<table class="${this.tableClass}">\n`
-    let defaultLinkRenderer = this.md.renderer.rules.link_open ||
+    md.renderer.rules.table_open = () => `<table class="${md.utils.escapeHtml(this.tableClass)}">\n`
+    let defaultLinkRenderer = md.renderer.rules.link_open ||
       function (tokens, idx, options, env, self) {
         return self.renderToken(tokens, idx, options)
       }
-    this.md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
-      Object.keys(this.anchorAttributes).map((attribute) => {
-        let aIndex = tokens[idx].attrIndex(attribute)
+    md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+      // The TOC plugin creates plain tokens without Token prototype methods.
+      const attrs = tokens[idx].attrs || (tokens[idx].attrs = [])
+      Object.keys(this.anchorAttributes).forEach((attribute) => {
+        let aIndex = attrs.findIndex(attr => attr[0] === attribute)
         let value = this.anchorAttributes[attribute]
         if (aIndex < 0) {
-          tokens[idx].attrPush([attribute, value]) // add new attribute
+          attrs.push([attribute, value])
         } else {
-          tokens[idx].attrs[aIndex][1] = value
+          attrs[aIndex][1] = value
         }
       })
       return defaultLinkRenderer(tokens, idx, options, env, self)
     }
 
     if (this.toc) {
-      this.md.use(toc, {
+      md.use(toc, {
         tocClassName: this.tocClass,
         tocFirstLevel: this.tocFirstLevel,
         tocLastLevel: this.tocLastLevelComputed,
@@ -192,7 +211,7 @@ export default {
         anchorLinkSymbolClassName: this.tocAnchorLinkClass,
         tocCallback: (tocMarkdown, tocArray, tocHtml) => {
           if (tocHtml) {
-            if (this.tocId && document.getElementById(this.tocId)) {
+            if (typeof document !== 'undefined' && this.tocId && document.getElementById(this.tocId)) {
               document.getElementById(this.tocId).innerHTML = tocHtml
             }
 
@@ -203,32 +222,18 @@ export default {
     }
 
     let outHtml = this.show ?
-      this.md.render(
+      md.render(
         this.prerender(this.sourceData)
       ) : ''
     outHtml = this.postrender(outHtml);
 
     this.$emit('rendered', outHtml)
-    return createElement(
-      'div', {
-        domProps: {
-          innerHTML: outHtml,
-        },
-      },
-    )
+    return h('div', { innerHTML: outHtml })
   },
 
   beforeMount() {
-    if (this.$slots.default) {
-      this.sourceData = ''
-      for (let slot of this.$slots.default) {
-        this.sourceData += slot.text
-      }
-    }
-
     this.$watch('source', () => {
-      this.sourceData = this.prerender(this.source)
-      this.$forceUpdate()
+      this.sourceData = this.source
     })
 
     this.watches.forEach((v) => {

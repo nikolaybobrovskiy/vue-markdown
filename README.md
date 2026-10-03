@@ -1,5 +1,23 @@
 # vue-markdown
 
+## Local Vue 3 port
+
+The local source component supports Vue 3 and `@vue/compat` in mode 3.
+Import `local_modules/vue-markdown-viewer/src` for local registration, or use
+`app.use(VueMarkdown)` to register `<vue-markdown>` globally. The existing props,
+`rendered`/`toc-rendered` events, and Markdown plugins are retained. The default
+slot is read once during the initial render; later `source` changes replace it.
+
+Run the DOM regression from the application's `public` directory:
+
+```sh
+node local_modules/vue-markdown-viewer/test/vue3.cjs
+```
+
+The application Webpack build consumes the migrated source. The upstream `dist`
+files, standalone Webpack 1 configs, and examples below remain Vue 2 artifacts;
+do not use them as Vue 3 entry points.
+
 [![npm](https://img.shields.io/npm/v/vue-markdown.svg?style=flat)](https://www.npmjs.com/package/vue-markdown)
 [![npm](https://img.shields.io/npm/l/vue-markdown.svg?style=flat)](https://www.npmjs.com/package/vue-markdown)
 [![npm](https://img.shields.io/npm/dt/vue-markdown.svg?style=flat)](https://www.npmjs.com/package/vue-markdown)
